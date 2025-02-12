@@ -8,7 +8,7 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := cfg.db.DeleteUsers(r.Context()); err != nil {
+	if err := cfg.db.Reset(r.Context()); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error deleting all users from database", err)
 		return
 	}

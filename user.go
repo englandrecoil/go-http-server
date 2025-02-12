@@ -22,7 +22,10 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	// get request data (email for user)
 	userVal := userVals{}
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&userVal)
+	if err := decoder.Decode(&userVal); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error decoding request's parameters", err)
+		return
+	}
 
 	user, err := cfg.db.CreateUser(r.Context(), userVal.Email)
 	if err != nil {
