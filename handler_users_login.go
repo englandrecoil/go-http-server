@@ -49,23 +49,28 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.MakeRefreshToken()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating refresh token", err)
+		return
 	}
 
 	// inserting refresh token's info in db
-	cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+	if _, err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
 		Token:     refreshToken,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		UserID:    userDB.ID,
 		ExpiresAt: time.Now().UTC().Add(60 * 24 * time.Hour),
-	})
+	}); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't insert refresh token in db", err)
+		return
+	}
 
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
-			ID:        userDB.ID,
-			CreatedAt: userDB.CreatedAt,
-			UpdatedAt: userDB.UpdatedAt,
-			Email:     userDB.Email,
+			ID:          userDB.ID,
+			CreatedAt:   userDB.CreatedAt,
+			UpdatedAt:   userDB.UpdatedAt,
+			Email:       userDB.Email,
+			IsChirpyRed: userDB.IsChirpyRed,
 		},
 		Token:        accessToken,
 		RefreshToken: refreshToken,

@@ -16,11 +16,12 @@ type userReqParams struct {
 }
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"`
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Email       string    `json:"email"`
+	Password    string    `json:"-"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *apiConfig) handlerUpdateCredentials(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +33,7 @@ func (cfg *apiConfig) handlerUpdateCredentials(w http.ResponseWriter, r *http.Re
 	userJWTID, err := auth.ValidateJWT(token, cfg.secret)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
+		return
 	}
 
 	userVal := userReqParams{}
@@ -59,9 +61,10 @@ func (cfg *apiConfig) handlerUpdateCredentials(w http.ResponseWriter, r *http.Re
 	}
 
 	respondWithJSON(w, http.StatusOK, User{
-		ID:        userDB.ID,
-		CreatedAt: userDB.CreatedAt,
-		UpdatedAt: userDB.UpdatedAt,
-		Email:     userDB.Email,
+		ID:          userDB.ID,
+		CreatedAt:   userDB.CreatedAt,
+		UpdatedAt:   userDB.UpdatedAt,
+		Email:       userDB.Email,
+		IsChirpyRed: userDB.IsChirpyRed,
 	})
 }

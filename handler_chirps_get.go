@@ -39,7 +39,7 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 	chirpDB, err := cfg.db.GetChirp(r.Context(), chirpIDFromRequst)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			respondWithError(w, http.StatusBadRequest, "Provided ID doesn't exist", err)
+			respondWithError(w, http.StatusNotFound, "Provided ID doesn't exist", err)
 			return
 		}
 		respondWithError(w, http.StatusInternalServerError, "Error retrieving chirp from database", err)
