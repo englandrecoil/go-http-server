@@ -5,29 +5,48 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/englandrecoil/go-http-server/internal/auth"
+	"github.com/englandrecoil/go-http-server/internal/database"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
+type userReqParams struct {
+	Password         string `json:"password"`
+	Email            string `json:"email"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
+}
+
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+	Password  string    `json:"-"`
+}
+
 func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
-	type userVals struct {
-		Email string `json:"email"`
-	}
-	type userData struct {
-		Id         string    `json:"id"`
-		Created_at time.Time `json:"created_at"`
-		Updated_at time.Time `json:"updated_at"`
-		Email      string    `json:"email"`
-	}
 
 	// get request data (email for user)
-	userVal := userVals{}
+	userVal := userReqParams{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&userVal); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error decoding request's parameters", err)
 		return
 	}
 
-	user, err := cfg.db.CreateUser(r.Context(), userVal.Email)
+	// hash password
+	hashedPassword, err := auth.HashPassword(userVal.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error hashing password", err)
+		return
+	}
+
+	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:          userVal.Email,
+		HashedPassword: hashedPassword,
+	})
+
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" {
@@ -37,10 +56,63 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	respondWithJSON(w, http.StatusCreated, userData{
-		Id:         user.ID.String(),
-		Created_at: user.CreatedAt,
-		Updated_at: user.UpdatedAt,
-		Email:      user.Email,
+	respondWithJSON(w, http.StatusCreated, User{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Email:     user.Email,
+	})
+}
+
+func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
+	userVal := userReqParams{}
+
+	type response struct {
+		User
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	// get user requests's params
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&userVal); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error decoding request's parameters", err)
+		return
+	}
+
+	// search user data by email in db
+	userDB, err := cfg.db.FindUserByEmail(r.Context(), userVal.Email)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
+		return
+	}
+
+	// authentication part
+	err = auth.CheckPasswordHash(userVal.Password, userDB.HashedPassword)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
+		return
+	}
+
+	// create JWT
+	expirationTime := time.Hour
+	if userVal.ExpiresInSeconds > 0 && userVal.ExpiresInSeconds < 3600 {
+		expirationTime = time.Duration(userVal.ExpiresInSeconds) * time.Second
+	}
+
+	accessToken, err := auth.MakeJWT(userDB.ID, cfg.secret, expirationTime)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error creating JWT", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, response{
+		User: User{
+			ID:        userDB.ID,
+			CreatedAt: userDB.CreatedAt,
+			UpdatedAt: userDB.UpdatedAt,
+			Email:     userDB.Email,
+		},
+		Token: accessToken,
 	})
 }

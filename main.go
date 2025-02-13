@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileServerHits atomic.Int32
 	db             *database.Queries
 	platfrom       string
+	secret         string
 }
 
 func main() {
@@ -28,7 +29,12 @@ func main() {
 
 	platform := os.Getenv("PLATFROM")
 	if platform == "" {
-		log.Fatal("PLATFORM must be st")
+		log.Fatal("PLATFORM must be set")
+	}
+
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		log.Fatal("SECRET must be set")
 	}
 
 	dbConn, err := sql.Open("postgres", dbURL)
@@ -41,6 +47,7 @@ func main() {
 		fileServerHits: atomic.Int32{},
 		db:             dbQueries,
 		platfrom:       platform,
+		secret:         secret,
 	}
 
 	fileServer := http.FileServer(http.Dir("."))
@@ -53,7 +60,9 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUserCreate)
+	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
 
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerCreateChirp)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerGetChirps)
