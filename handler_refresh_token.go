@@ -63,7 +63,7 @@ func (cfg *apiConfig) handlerRevokeRefreshToken(w http.ResponseWriter, r *http.R
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			respondWithError(w, http.StatusBadRequest, "Invalid refresh token", err)
+			respondWithError(w, http.StatusUnauthorized, "Invalid refresh token", err)
 			return
 		}
 		respondWithError(w, http.StatusInternalServerError, "Couldn't revoke refresh token", err)

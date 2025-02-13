@@ -16,3 +16,9 @@ WHERE email = $1;
 
 -- name: Reset :exec
 DELETE FROM users;
+
+-- name: UpdateUserCredentials :one
+UPDATE users
+SET hashed_password = $1, email = $2, updated_at = $3
+WHERE id = $4
+RETURNING *;
