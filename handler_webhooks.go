@@ -6,10 +6,21 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/englandrecoil/go-http-server/internal/auth"
 	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerWebhooks(w http.ResponseWriter, r *http.Request) {
+	key, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get API key", err)
+		return
+	}
+	if key != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "Wrong API key provided", err)
+		return
+	}
+
 	type webhookRequest struct {
 		Event string `json:"event"`
 		Data  struct {

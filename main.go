@@ -17,10 +17,11 @@ type apiConfig struct {
 	db             *database.Queries
 	platfrom       string
 	secret         string
+	polkaKey       string
 }
 
 func main() {
-	godotenv.Load()
+	godotenv.Load(".env")
 
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
@@ -37,6 +38,11 @@ func main() {
 		log.Fatal("SECRET must be set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Error opening db: %s", err)
@@ -48,6 +54,7 @@ func main() {
 		db:             dbQueries,
 		platfrom:       platform,
 		secret:         secret,
+		polkaKey:       polkaKey,
 	}
 
 	fileServer := http.FileServer(http.Dir("."))

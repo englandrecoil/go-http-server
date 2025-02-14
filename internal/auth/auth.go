@@ -99,3 +99,21 @@ func MakeRefreshToken() (string, error) {
 	refreshToken := hex.EncodeToString(key)
 	return refreshToken, nil
 }
+
+func GetAPIKey(header http.Header) (string, error) {
+	authHeader := header.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("error getting authorization header")
+	}
+
+	authHeaderSplit := strings.Split(authHeader, " ")
+	if authHeaderSplit[0] != "ApiKey" {
+		return "", errors.New("wrong APIKey format")
+	}
+
+	if authHeaderSplit[1] == "" {
+		return "", errors.New("no API key provided")
+	}
+
+	return authHeaderSplit[1], nil
+}
