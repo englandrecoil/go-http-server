@@ -19,15 +19,15 @@
 ## 💽 Установка
 Чтобы начать использовать:
 1. Клонируйте репозиторий:
-```
+```terminal
 git clone https://github.com/englandrecoil/go-http-server
 ```
 2. Перейдите в созданную папку:
-```
+```terminal
 cd go-http-server
 ```
 3. Создайте .env файл в корне папки go-http-server и не забудьте подставить свои значения. С его структурой и примером можно ознакомиться ниже:
-```
+```.env
 # Ссылка на БД
 DB_URL="postgres://nikitateresenko:@localhost:5432/chirpy?sslmode=disable"
 # Оставьте это значение по умолчанию
@@ -39,7 +39,7 @@ RbjRvFODK8ZEB/cotg8/AA=="
 POLKA_KEY="f271c81ff7084ee5b99a5091b42d486e"
 ```
 4. Соберите и запустите сервер командой:
-```
+```terminal
 go build && ./go-http-server
 ```
 После успешного запуска сервер будет доступен снаружи как localhost:8080
