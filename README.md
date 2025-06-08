@@ -27,8 +27,8 @@ git clone https://github.com/englandrecoil/go-http-server
 ```
 cd go-http-server
 ```
-3. Create a `.env` file in the root of the `go-http-server` folder and make sure to insert your values. Here's the structure and an example:
-```
+3. Create a .env file in the root of the go-http-server folder and make sure to insert your values. Here's the structure and an example:
+```.env
 # Database URL
 DB_URL="postgres://nikitateresenko:@localhost:5432/chirpy?sslmode=disable"
 # Leave this as default
