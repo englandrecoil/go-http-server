@@ -1,4 +1,5 @@
 # go-http-server
+[![en](https://img.shields.io/badge/lang-en-green?style=flat)](https://github.com/englandrecoil/go-http-server/blob/main/README.md)
 
 **go-http-server** — это минималистичный HTTP-бэкенд на языке Go, имитирующий простейшую социальную сеть. Проект задуман как песочница для изучения веб-разработки на Go: обработки HTTP-запросов, построения REST API и работы с JSON — исключительно на стандартной библиотеке.
 
